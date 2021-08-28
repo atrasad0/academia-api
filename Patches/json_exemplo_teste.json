@@ -1,0 +1,30 @@
+{
+    "_comentario": "Lembrando que para os atributos {aulas.id, plano.id} seu valor deverá ser o id da entidade do banco de dados atual.",
+
+    "nome": "Yuri Goncalves",
+    "cpf": "444.555.888-20",
+    "sexo": "Masculino",
+    "dataNascimento": "1994-06-27",
+    "dataCadastro": "2021-01-05",
+    "dataPagamento": "2021-04-05",
+    "telefones": [
+        {
+            "ddi": 55,
+            "ddd": 16,
+            "numero": "33661120"
+        }
+    ],
+    "aulas": [
+        {
+           "id": 4,
+            "tipo": "MUSCULACAO"
+        }
+    ],
+    "plano": {
+        "id": 3,
+        "descricao": "Cobertura de três meses de academia a partir da data de pagamento do aluno",
+        "valor": 220.00,
+        "ativo": true,
+        "tipo": "TRIMESTRAL"
+    }
+}

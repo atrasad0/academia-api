@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.api.cadastroAcademia.service.business.mapper.AlunoMapper">
+    <resultMap id="alunoResult"           type="aluno">
+        <result property="id"             column="id_aluno" />
+        <result property="nome"           column="nome" />
+        <result property="cpf"            column="cpf" />
+        <result property="sexo"           column="sexo" />
+        <result property="dataNascimento" column="data_nascimento" />
+        <result property="dataPagamento"  column="data_pagamento" />
+        <association property="telefones" column="id_aluno" select="com.api.cadastroAcademia.service.business.mapper.TelefoneMapper.listaTelefonesPorIdAluno" />
+        <association property="aulas"     column="id_aluno" select="com.api.cadastroAcademia.service.business.mapper.AulaMapper.listaAulasPorIdAluno" />
+        <association property="plano"     column="id_plano" select="com.api.cadastroAcademia.service.business.mapper.PlanoMapper.buscaPlano" />
+
+    </resultMap>
+
+    <insert id="insere" parameterType="aluno">
+        <selectKey keyProperty="id" resultType="int">
+            SELECT last_insert_id() AS id
+        </selectKey>
+        INSERT INTO alunos (
+            nome,
+            cpf,
+            sexo,
+            data_nascimento,
+            data_cadastro,
+            data_pagamento,
+            id_plano
+        )
+        VALUES (
+            #{nome},
+            #{cpf},
+            #{sexo},
+            #{dataNascimento},
+            #{dataCadastro},
+            #{dataPagamento},
+            #{plano.id}
+        )
+    </insert>
+
+    <update id="modifica" parameterType="aluno">
+        UPDATE alunos
+        SET
+        nome = #{nome},
+        cpf  = #{cpf},
+        sexo = #{sexo},
+        data_nascimento = #{dataNascimento},
+        data_Pagamento = #{dataPagamento},
+        id_plano = #{plano.id}
+        WHERE id_aluno = #{id}
+    </update>
+
+    <delete id="remove" parameterType="java.lang.Integer">
+        DELETE
+        FROM alunos
+        WHERE id_aluno = #{idAluno}
+    </delete>
+
+    <select id="buscaAluno" parameterType="java.lang.Integer" resultMap="alunoResult">
+        SELECT *
+        FROM alunos a
+        WHERE a.id_aluno = #{idAluno}
+    </select>
+
+    <select id="isCpfDuplicado" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM alunos a
+        WHERE a.cpf = #{cpf}
+    </select>
+
+    <select id="buscaAlunos"  resultMap="alunoResult">
+        SELECT *
+        FROM alunos
+    </select>
+
+</mapper>

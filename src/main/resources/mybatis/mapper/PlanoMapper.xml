@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.api.cadastroAcademia.service.business.mapper.PlanoMapper">
+
+    <resultMap id="planoResult" type="plano">
+        <result property="id"         column="id_plano" />
+        <result property="descricao"  column="descricao" />
+        <result property="valor"      column="valor" />
+        <result property="ativo"      column="ativo" jdbcType="SMALLINT" />
+        <result property="tipo"       column="tipo" javaType="com.api.cadastroAcademia.model.enums.TipoPlano" />
+
+    </resultMap>
+
+    <select id="buscaPlano" parameterType="java.lang.Integer" resultMap="planoResult">
+        SELECT *
+        FROM planos p
+        WHERE p.id_plano = #{idPlano}
+    </select>
+
+    <select id="buscaPlanos" resultMap="planoResult">
+        SELECT *
+        FROM planos p
+    </select>
+
+</mapper>

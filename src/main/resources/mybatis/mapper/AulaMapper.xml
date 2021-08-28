@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.api.cadastroAcademia.service.business.mapper.AulaMapper">
+
+    <resultMap id="aulaResult" type="aula">
+        <result property="id"       column="id_aula" />
+        <result property="tipo"     column="tipo" javaType="com.api.cadastroAcademia.model.enums.TipoAula" />
+
+    </resultMap>
+
+    <insert id="insere" parameterType="aula">
+        <selectKey keyProperty="id" resultType="int">
+            SELECT last_insert_id() AS id
+        </selectKey>
+        INSERT INTO aulas (
+            tipo
+        )
+        VALUES (
+            #{tipo}
+        )
+    </insert>
+
+    <insert id="insereAulaAluno" parameterType="java.lang.Integer">
+        <selectKey keyProperty="id" resultType="int">
+            SELECT last_insert_id() AS id
+        </selectKey>
+        INSERT INTO aula_aluno (
+        id_aula,
+        id_aluno
+        )
+        VALUES (
+        #{idAula},
+        #{idAluno}
+        )
+    </insert>
+
+    <update id="modifica" parameterType="aula">
+        UPDATE aulas
+        SET
+        tipo = #{tipo},
+        WHERE id_aula = #{id}
+    </update>
+
+    <delete id="remove" parameterType="java.lang.Integer">
+        DELETE
+        FROM aulas
+        WHERE id_aula = #{id}
+    </delete>
+
+    <delete id="removeAllAulaAluno" parameterType="java.lang.Integer">
+        DELETE
+        FROM aula_aluno
+        WHERE id_aluno = #{idAluno}
+    </delete>
+
+    <select id="listaAulasPorIdAluno" resultMap="aulaResult">
+        SELECT *
+        FROM aulas a
+        INNER JOIN aula_aluno al ON al.id_aula = a.id_aula
+        WHERE al.id_aluno = #{idAluno}
+    </select>
+
+
+    <select id="buscaIdAulaPorTipo" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT a.id_aula
+        FROM aulas a
+        WHERE a.tipo = #{tipoAula}
+    </select>
+
+    <select id="buscaAulas" resultMap="aulaResult">
+        SELECT *
+        FROM aulas
+    </select>
+
+
+</mapper>

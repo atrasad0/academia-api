@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+
+<configuration>
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+
+    <typeAliases>
+        <typeAlias type="com.api.cadastroAcademia.model.Aluno" alias="aluno" />
+        <typeAlias type="com.api.cadastroAcademia.model.Aula" alias="aula" />
+        <typeAlias type="com.api.cadastroAcademia.model.Plano" alias="plano" />
+        <typeAlias type="com.api.cadastroAcademia.model.Telefone" alias="telefone" />
+
+    </typeAliases>
+
+    <typeHandlers>
+        <typeHandler javaType="java.lang.Boolean"                                          handler="com.api.cadastroAcademia.dao.impl.BooleanTypeHandler" />
+        <typeHandler javaType="com.api.cadastroAcademia.model.enums.TipoPlano" handler="org.apache.ibatis.type.EnumTypeHandler" />
+        <typeHandler javaType="com.api.cadastroAcademia.model.enums.TipoAula" handler="org.apache.ibatis.type.EnumTypeHandler" />
+    </typeHandlers>
+
+    <mappers>
+        <mapper resource="mybatis/mapper/AlunoMapper.xml" />
+        <mapper resource="mybatis/mapper/TelefoneMapper.xml" />
+        <mapper resource="mybatis/mapper/AulaMapper.xml" />
+        <mapper resource="mybatis/mapper/PlanoMapper.xml" />
+    </mappers>
+
+</configuration>

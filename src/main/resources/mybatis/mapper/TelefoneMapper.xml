@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.api.cadastroAcademia.service.business.mapper.TelefoneMapper">
+
+    <resultMap id="telefoneResult" type="telefone">
+        <result property="id"       column="id_telefone" />
+        <result property="ddi"      column="ddi" />
+        <result property="ddd"      column="ddd" />
+        <result property="numero"   column="numero" />
+    </resultMap>
+
+    <insert id="insere" parameterType="telefone">
+        <selectKey keyProperty="id" resultType="int">
+            SELECT last_insert_id() AS id
+        </selectKey>
+        INSERT INTO telefones (
+            ddi,
+            ddd,
+            numero,
+            id_aluno
+        )
+        VALUES (
+            #{ddi},
+            #{ddd},
+            #{numero},
+            #{aluno.id}
+        )
+    </insert>
+
+    <update id="modifica" parameterType="telefone">
+        UPDATE telefones
+        SET
+        ddi = #{nome},
+        ddd  = #{cpf},
+        numero = #{sexo},
+        id_aluno = #{aluno.id}
+        WHERE id_telefone = #{id}
+    </update>
+
+    <delete id="remove" parameterType="java.lang.Integer">
+        DELETE
+        FROM telefones
+        WHERE id_telefone = #{id}
+    </delete>
+
+    <select id="listaTelefonesPorIdAluno" parameterType="java.lang.Integer" resultMap="telefoneResult">
+        SELECT *
+        FROM telefones t
+        WHERE t.id_aluno = #{idAluno}
+    </select>
+
+    <delete id="removeAllNumbers" parameterType="java.lang.Integer">
+        DELETE
+        FROM telefones
+        WHERE id_aluno = #{idAluno}
+    </delete>
+
+</mapper>
