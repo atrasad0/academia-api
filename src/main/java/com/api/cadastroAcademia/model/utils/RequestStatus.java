@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.http.HttpStatus;
 
 /**
  * Esta classe contêm informações de status da requisição atual.
@@ -15,12 +16,12 @@ import lombok.NoArgsConstructor;
 public class RequestStatus {
     /** Um possível id gerado nesta requisição. */
     private int id;
-    /** Qual objeto foi referenciado nesta requisição. */
-    private Class<?> referencedObj ;
     /** A exception que esta requisição possa ter gerado.*/
     private Exception error;
     /** Se esta é uma "nova" entidade.*/
     private boolean newEntity;
+    /*Codigo de Stuatus da requisicao*/
+    private HttpStatus statusCod;
 
 
     public RequestStatus(int id) {

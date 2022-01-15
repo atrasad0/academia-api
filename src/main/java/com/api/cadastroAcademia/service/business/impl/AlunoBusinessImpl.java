@@ -3,9 +3,9 @@ package com.api.cadastroAcademia.service.business.impl;
 import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.Aula;
-import com.api.cadastroAcademia.model.utils.RequestedEntity;
-import com.api.cadastroAcademia.model.utils.RequestStatus;
+import com.api.cadastroAcademia.model.TO.AlunoTO;
 import com.api.cadastroAcademia.model.Telefone;
+import com.api.cadastroAcademia.model.utils.RequestStatus;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
 import com.api.cadastroAcademia.service.business.mapper.AulaMapper;
 import com.api.cadastroAcademia.service.business.mapper.TelefoneMapper;
@@ -14,14 +14,17 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service("alunoBusinessImpl")
 @Scope("singleton")
@@ -34,7 +37,7 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
     @Override
     @Transactional
-    public RequestStatus salvaAluno(@NonNull Aluno aluno) {
+    public AlunoTO salvaAluno(@NonNull Aluno aluno) {
         try {
             boolean newEntity = false;
             validaParametros(aluno);
@@ -53,21 +56,30 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
             log.info(String.format("Method 'salvaAluno' executed and a %s has created with id: %s.", aluno.getClass().getSimpleName(), aluno.getId()));
 
-            return RequestStatus.builder()
+            val status= RequestStatus.builder()
                     .id(aluno.getId())
-                    .referencedObj(aluno.getClass())
                     .newEntity(newEntity)
+                    .statusCod(HttpStatus.CREATED)
+                    .build();
+
+            return AlunoTO.builder()
+                    .requestStatus(status)
+                    .aluno(aluno)
                     .build();
 
         } catch (Exception e) {
             log.error(e.getMessage());
 
-            return RequestStatus.builder()
-                    .id(aluno.getId())
-                    .referencedObj(aluno.getClass())
+            val status =RequestStatus.builder()
                     .newEntity(false)
+                    .statusCod(HttpStatus.INTERNAL_SERVER_ERROR)
                     .error(e)
                     .build();
+
+            return AlunoTO.builder()
+                .requestStatus(status)
+                .aluno(null)
+                .build();
         }
     }
 
@@ -118,35 +130,40 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
     @Override
     @Transactional
-    public Optional<RequestedEntity> buscaAluno (@NonNull Integer id) {
+    public Optional<AlunoTO> buscaAluno (@NonNull Integer id) {
         try {
             val aluno = alunoMapper.buscaAluno(id);
 
             if(aluno == null)
                 return Optional.empty();
 
-            val entity = new RequestedEntity(aluno);
+            val status = RequestStatus.builder()
+                    .id(aluno.getId())
+                    .statusCod(HttpStatus.FOUND).build();
 
-            return Optional.of(entity);
+            return Optional.of(AlunoTO.builder()
+                    .aluno(aluno)
+                    .requestStatus(status)
+                    .build());
         } catch (Exception e) {
 
             log.error(e.getMessage());
 
             val status = RequestStatus.builder()
                     .id(id)
-                    .referencedObj(Aluno.class)
                     .newEntity(false)
                     .error(e)
                     .build();
 
-            val response = new RequestedEntity(status);
-
-            return Optional.of(response);
+            return Optional.of(AlunoTO.builder()
+                    .aluno(null)
+                    .requestStatus(status)
+                    .build());
         }
     }
 
     @Override
-    public Optional<RequestedEntity> buscaAlunos() {
+    public Optional<List<AlunoTO>> buscaAlunos() {
         try {
             val alunos = alunoMapper.buscaAlunos();
             if(alunos == null || alunos.isEmpty())
@@ -154,43 +171,52 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
             log.debug("{} found", alunos.size());
 
-            val entity = new RequestedEntity(alunos);
 
-            return Optional.of(entity);
+            return Optional.of(alunos.stream()
+                    .map(v -> AlunoTO.builder().aluno(v)
+                            .requestStatus(RequestStatus.builder().id(v.getId()).statusCod(HttpStatus.FOUND).build())
+                            .build())
+                    .collect(Collectors.toList()));
 
         } catch (Exception e) {
             log.error(e.getMessage());
 
             val status = RequestStatus.builder()
-                    .referencedObj(Aluno.class)
                     .newEntity(false)
                     .error(e)
                     .build();
 
-            val response = new RequestedEntity(status);
-
-            return Optional.of(response);
+            return Optional.of(Collections.singletonList(AlunoTO.builder()
+                    .aluno(null)
+                    .requestStatus(status)
+                    .build()));
         }
 
     }
 
     @Override
     @Transactional
-    public RequestStatus removeAluno(Integer id) {
+    public AlunoTO removeAluno(Integer id) {
         try {
             alunoMapper.remove(id);
             log.info("Aluno removed, id: " + id);
 
-            return RequestStatus.builder()
-                    .id(id)
+            val status = RequestStatus.builder().statusCod(HttpStatus.NO_CONTENT).build();
+
+            return AlunoTO.builder()
+                    .aluno(new Aluno(id))
+                    .requestStatus(status)
                     .build();
         } catch (Exception e) {
             log.error(e.getMessage());
 
-            return RequestStatus.builder()
+            val status = RequestStatus.builder()
                     .id(id)
-                    .referencedObj(Aluno.class)
                     .error(e)
+                    .build();
+            return AlunoTO.builder()
+                    .aluno(new Aluno(id))
+                    .requestStatus(status)
                     .build();
         }
     }

@@ -28,6 +28,10 @@ public class Aluno implements Serializable {
     private @NotNull List<Aula> aulas;
     private @NotNull Plano plano;
 
+    public Aluno(Integer id) {
+        this.id = id;
+    }
+
 
     public Long getIdade() {
         if (this.dataNascimento == null)

@@ -36,14 +36,11 @@ public class AlunoController {
 
        val entity = alunoBusiness.salvaAluno(aluno);
 
-       if (entity == null)
-           return new ResponseEntity<>( new ApiMessage("Tente realizar a requisicao novamente"), HttpStatus.SERVICE_UNAVAILABLE);
+       if (entity.getRequestStatus().hasError())
+           return new ResponseEntity<>(new ApiMessage(entity.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
 
-       if (entity.hasError())
-           return new ResponseEntity<>(new ApiMessage(entity.getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
-
-       if (entity.isCreated())
-           return new ResponseEntity<>(new ApiMessage("id:" + entity.getId()), HttpStatus.CREATED);
+       if (entity.getRequestStatus().isCreated())
+           return new ResponseEntity<>(new ApiMessage("id:" + entity.getRequestStatus().getId()), HttpStatus.CREATED);
 
        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
 
@@ -59,11 +56,11 @@ public class AlunoController {
             return new ResponseEntity<>(new ApiMessage("Aluno não encontrado"),HttpStatus.NOT_FOUND);
 
 
-        if(response.get().hasError()) {
-            return new ResponseEntity<>(new ApiMessage(response.get().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if(response.get().getRequestStatus().hasError()) {
+            return new ResponseEntity<>(new ApiMessage(response.get().getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return response.map( v -> new ResponseEntity<>(response.get().getEntity(),HttpStatus.FOUND))
+        return response.map( v -> new ResponseEntity<>(response.get().getAluno(),HttpStatus.FOUND))
                      .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -75,14 +72,11 @@ public class AlunoController {
         if (response.isEmpty())
             return new ResponseEntity<>( new ApiMessage("Tente realizar a requisicao novamente"), HttpStatus.SERVICE_UNAVAILABLE);
 
-        if (response.get().hasError())  {
-            return new ResponseEntity<>(new ApiMessage(response.get().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (response.get().isEmpty())  {
+            return new ResponseEntity<>(new ApiMessage("Recursos não encontrados"), HttpStatus.NOT_FOUND);
         }
 
-        if (!response.get().isList())
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-
-        return response.map( v -> new ResponseEntity<>(response.get().getEntity(),HttpStatus.FOUND))
+        return response.map( v -> new ResponseEntity<>(response.get(), HttpStatus.FOUND))
                      .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
@@ -92,8 +86,8 @@ public class AlunoController {
 
         val entity = alunoBusiness.salvaAluno(aluno);
 
-        if (entity.hasError())
-            return new ResponseEntity<>(new ApiMessage(entity.getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (entity.getRequestStatus().hasError())
+            return new ResponseEntity<>(new ApiMessage(entity.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -107,14 +101,14 @@ public class AlunoController {
         if (entity.isEmpty())
             return new ResponseEntity<>(new ApiMessage("Aluno não encontrado"), HttpStatus.NOT_FOUND);
 
-        if (entity.get().hasError())
-            return new ResponseEntity<>(new ApiMessage(entity.get().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (entity.get().getRequestStatus().hasError())
+            return new ResponseEntity<>(new ApiMessage(entity.get().getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
 
         val response = alunoBusiness.removeAluno(id);
 
-        if (response.hasError())
-            return new ResponseEntity<>(new ApiMessage(response.getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        if (response.getRequestStatus().hasError())
+            return new ResponseEntity<>(new ApiMessage(response.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return new ResponseEntity<>(new ApiMessage("Aluno deletado com sucesso"), HttpStatus.OK);
     }
 }
