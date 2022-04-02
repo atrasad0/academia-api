@@ -4,14 +4,12 @@ import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.Aula;
 import com.api.cadastroAcademia.model.Plano;
 import com.api.cadastroAcademia.model.Telefone;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 public class AlunoTO  {
      String nome;
      String cpf;

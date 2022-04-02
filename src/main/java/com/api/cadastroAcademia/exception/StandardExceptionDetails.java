@@ -1,16 +1,16 @@
 package com.api.cadastroAcademia.exception;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
-@Builder
-@Value
+@SuperBuilder
+@Getter
 public class StandardExceptionDetails {
-    String title;
-    String detail;
-    int status;
-    LocalDateTime when;
+    private final String title;
+    private final String detail;
+    private final int status;
+    private final LocalDateTime when;
 
 }

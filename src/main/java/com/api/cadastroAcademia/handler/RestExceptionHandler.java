@@ -3,13 +3,17 @@ package com.api.cadastroAcademia.handler;
 import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.exception.ResourceNotFoundException;
 import com.api.cadastroAcademia.exception.StandardExceptionDetails;
+import com.api.cadastroAcademia.exception.ValidationExceptionDetails;
 import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class RestExceptionHandler {
@@ -36,5 +40,22 @@ public class RestExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException manvException) {
+        val fields = manvException.getFieldErrors().stream().map(FieldError::getField).collect(Collectors.joining(","));
+        val messages = manvException.getFieldErrors().stream().map(FieldError::getDefaultMessage).collect(Collectors.joining(","));
+
+        val response = ValidationExceptionDetails.builder()
+                .when(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .title("Erro na valida\u00E7\u00E3o dos campos")
+                .field(fields)
+                .fieldMessage(messages)
+                .detail(manvException.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

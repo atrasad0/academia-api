@@ -1,13 +1,13 @@
 package com.api.cadastroAcademia.controller;
 
 import com.api.cadastroAcademia.business.AlunoBusiness;
-import com.api.cadastroAcademia.exception.ResourceNotFoundException;
 import com.api.cadastroAcademia.exception.ApiException;
+import com.api.cadastroAcademia.exception.ResourceNotFoundException;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.ApiMessage;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,12 +25,12 @@ import javax.validation.Valid;
  * EndPoint REST que atende as requisiçoes relacionadas a um aluno.
  */
 @Slf4j
+@AllArgsConstructor
 @RestController
 @RequestMapping(value="/alunos")
 public class AlunoController {
 
-    @Autowired
-    private AlunoBusiness alunoBusiness;
+    private final AlunoBusiness alunoBusiness;
 
     @PostMapping
     public ResponseEntity<?> post (@Valid @RequestBody Aluno aluno) {
@@ -39,7 +39,7 @@ public class AlunoController {
 
         try {
             val entity = alunoBusiness.salvaAluno(aluno);
-            return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessage(String.format("Aluno %s criado com sucesso.", entity.getNome())));
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ApiException(e.getMessage());
@@ -50,6 +50,7 @@ public class AlunoController {
     @GetMapping("/{id}") ResponseEntity<?> get(@PathVariable("id") Integer id) {
         log.info("Get Aluno");
         log.debug("id {}", id);
+
         try {
             val entity = alunoBusiness.buscaAluno(id);
             if (entity.isEmpty())
@@ -90,6 +91,7 @@ public class AlunoController {
     ResponseEntity<?> edit(@Valid @RequestBody Aluno aluno) {
         log.info("put Aluno");
         log.debug("parameters {}", aluno);
+
         try {
             val entity = alunoBusiness.salvaAluno(aluno);
             return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiMessage(String.format("Aluno %s editado com sucesso.", entity.getNome())));
@@ -104,11 +106,13 @@ public class AlunoController {
     ResponseEntity<?> delete(@PathVariable Integer id) {
         log.info("Delete Aluno");
         log.debug("id {}", id);
+
         try {
             val entity = alunoBusiness.buscaAluno(id);
             if (entity.isEmpty())
                 throw new ResourceNotFoundException(String.format("Aluno com o ID: %s não encontrado.", id));
 
+            alunoBusiness.removeAluno(id);
             return ResponseEntity.status(HttpStatus.OK).body( new ApiMessage(String.format("Aluno %s deletado com sucesso", entity.get().getNome())));
 
         } catch (ResourceNotFoundException re) {

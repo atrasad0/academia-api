@@ -4,9 +4,9 @@ import com.api.cadastroAcademia.business.AulaBusiness;
 import com.api.cadastroAcademia.business.PlanoBusiness;
 import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.model.ApiMessage;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,12 +18,13 @@ import org.springframework.web.bind.annotation.RestController;
  */
 
 @Slf4j
+@AllArgsConstructor
 @RestController
 @RequestMapping(value="/academia")
 public class AcademiaController {
 
-    private @Autowired PlanoBusiness planoBusiness;
-    private @Autowired AulaBusiness aulaBusiness;
+    private final PlanoBusiness planoBusiness;
+    private final AulaBusiness aulaBusiness;
 
     @GetMapping("/busca-planos") ResponseEntity<?> getPLanos() {
         try {

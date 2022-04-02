@@ -8,10 +8,10 @@ import com.api.cadastroAcademia.model.dto.AlunoTO;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
 import com.api.cadastroAcademia.service.business.mapper.AulaMapper;
 import com.api.cadastroAcademia.service.business.mapper.TelefoneMapper;
+import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -26,12 +26,13 @@ import java.util.stream.Collectors;
 
 @Service("alunoBusinessImpl")
 @Scope("singleton")
+@AllArgsConstructor
 @Slf4j
 public class AlunoBusinessImpl implements AlunoBusiness {
 
-    private @Autowired AlunoMapper alunoMapper;
-    private @Autowired TelefoneMapper telefoneMapper;
-    private @Autowired AulaMapper aulaMapper;
+    private final AlunoMapper alunoMapper;
+    private final TelefoneMapper telefoneMapper;
+    private final AulaMapper aulaMapper;
 
     @Override
     @Transactional
@@ -50,7 +51,6 @@ public class AlunoBusinessImpl implements AlunoBusiness {
         salvaTelefones(aluno.getTelefones(), aluno);
 
         log.info(String.format("Method 'salvaAluno' executed and a %s has created with id: %s.", aluno.getClass().getSimpleName(), aluno.getId()));
-
         return new AlunoTO(aluno);
     }
 
@@ -145,24 +145,32 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     private void validaParametros(Aluno aluno) {
         val sb = new StringBuilder();
 
-        if (aluno.getNome() == null)
-            sb.append("Nome do aluno e obrigatorio.\n");
+        if (Objects.isNull(aluno.getNome()))
+            sb.append("Nome do aluno \u00E9 obrigat\u00F3rio.\n");
 
-        if (aluno.getCpf() == null)
-            sb.append("CPF do aluno e obrigatorio.\n");
+        if (Objects.isNull(aluno.getCpf()))
+            sb.append("CPF do aluno \u00E9 obrigat\u00F3rio.\n");
 
-        if (aluno.getDataPagamento() == null)
-            sb.append("Data de pagamento e obrigatorio.\n");
+        if (Objects.isNull(aluno.getDataPagamento()))
+            sb.append("Data de pagamento \u00E9 obrigat\u00F3rio.\n");
 
-        if (aluno.getAulas() == null || aluno.getAulas().isEmpty())
+        if (Objects.isNull(aluno.getAulas()) || aluno.getAulas().isEmpty())
             sb.append("Um aluno precisa estar matriculado em uma aula.\n");
 
-        if (aluno.getPlano() == null) {
-            sb.append("Plano do aluno e obrigatorio.\n");
+        if (Objects.isNull(aluno.getPlano())) {
+            sb.append("Plano do aluno \u00E9 obrigat\u00F3rio..\n");
         }
 
-        if (sb.length() >0)
-            throw new IllegalArgumentException("AlunoBusinessImpl.validaParametros - \n" + sb);
+        if (Objects.isNull(aluno.getDataCadastro())) {
+            sb.append("Data de cadastro \u00E9 um campo obrigat\u00F3rio.\n");
+        } else {
+            if (aluno.getDataCadastro().isAfter(LocalDate.now())) {
+                sb.append("Data de cadastro n\u00E3o pode estar no futuro.\n");
+            }
+        }
+
+        if (sb.length() > 0)
+            throw new IllegalArgumentException(sb.toString());
     }
 
     /**

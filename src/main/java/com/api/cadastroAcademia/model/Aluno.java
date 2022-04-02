@@ -24,7 +24,7 @@ public class Aluno implements Serializable {
     private @NotNull String cpf;
     private String sexo;
     private LocalDate dataNascimento;
-    private LocalDate dataCadastro;
+    private @NotNull LocalDate dataCadastro;
     private @NotNull LocalDate dataPagamento;
     private List<Telefone> telefones;
     private @NotNull List<Aula> aulas;

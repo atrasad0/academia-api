@@ -3,9 +3,8 @@ package com.api.cadastroAcademia.controller;
 import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.model.ApiMessage;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
  * EndPoint REST para testar se existe uma conexao com a API.
  */
 @Slf4j
+@AllArgsConstructor
 @RestController
 @RequestMapping(value="/api")
 public class APIController {
 
-    private @Autowired AlunoMapper alunoMapper;
+    private final AlunoMapper alunoMapper;
 
     @GetMapping("/teste-conexao")
     public ResponseEntity<?> conexao() {
