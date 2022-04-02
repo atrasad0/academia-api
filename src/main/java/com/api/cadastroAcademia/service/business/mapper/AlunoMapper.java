@@ -20,4 +20,6 @@ public interface AlunoMapper {
 
     boolean isCpfDuplicado(@Param("cpf") String cpf);
 
+    void testeConexao();
+
 }

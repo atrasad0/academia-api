@@ -18,7 +18,6 @@
     </typeAliases>
 
     <typeHandlers>
-        <typeHandler javaType="java.lang.Boolean"                                          handler="com.api.cadastroAcademia.dao.impl.BooleanTypeHandler" />
         <typeHandler javaType="com.api.cadastroAcademia.model.enums.TipoPlano" handler="org.apache.ibatis.type.EnumTypeHandler" />
         <typeHandler javaType="com.api.cadastroAcademia.model.enums.TipoAula" handler="org.apache.ibatis.type.EnumTypeHandler" />
     </typeHandlers>

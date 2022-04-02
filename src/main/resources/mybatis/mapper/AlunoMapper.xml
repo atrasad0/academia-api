@@ -76,4 +76,8 @@
         FROM alunos
     </select>
 
+    <select id="testeConexao" resultType="int">
+        SELECT 1
+    </select>
+
 </mapper>

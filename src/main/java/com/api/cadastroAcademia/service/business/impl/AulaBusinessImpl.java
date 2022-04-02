@@ -16,8 +16,7 @@ import java.util.Optional;
 @Scope("singleton")
 public class AulaBusinessImpl implements AulaBusiness {
 
-    private @Autowired
-    AulaMapper aulaMapper;
+    private @Autowired AulaMapper aulaMapper;
 
     @Override
     @Transactional

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,15 +17,14 @@ import java.util.Optional;
 @Scope("singleton")
 public class PlanoBusinessImpl implements PlanoBusiness {
 
-    private @Autowired
-    PlanoMapper planoMapper;
+    @Autowired private PlanoMapper planoMapper;
 
     @Override
     @Transactional
-    public Optional<List<Plano>> buscaPlanos() {
+    public List<Plano> buscaPlanos() {
         val planos = planoMapper.buscaPlanos();
         if (planos == null || planos.isEmpty())
-            return Optional.empty();
-        return Optional.of(planos);
+            return Collections.emptyList();
+        return planos;
     }
 }

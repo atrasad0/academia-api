@@ -1,14 +1,12 @@
 package com.api.cadastroAcademia.business;
 
 import com.api.cadastroAcademia.model.Aluno;
-import com.api.cadastroAcademia.model.TO.AlunoTO;
+import com.api.cadastroAcademia.model.dto.AlunoTO;
 import lombok.NonNull;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
 public interface AlunoBusiness {
 
     /**
@@ -29,11 +27,11 @@ public interface AlunoBusiness {
      * Tenta buscar todos os alunos no banco de dados.
      * @return O {@link Aluno}s se forem encontrados.{@code Optional.empty()} se não encontrados.
      */
-    Optional<List<AlunoTO>> buscaAlunos();
+    List<AlunoTO> buscaAlunos();
 
     /**
      * Remove um aluno do banco de dados.
      * @param id O id de identificação do aluno.
      */
-    AlunoTO removeAluno(@NonNull Integer id);
+    void removeAluno(@NonNull Integer id);
 }

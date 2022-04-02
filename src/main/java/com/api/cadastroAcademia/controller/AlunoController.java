@@ -1,6 +1,8 @@
 package com.api.cadastroAcademia.controller;
 
 import com.api.cadastroAcademia.business.AlunoBusiness;
+import com.api.cadastroAcademia.exception.ResourceNotFoundException;
+import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.ApiMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -24,91 +26,99 @@ import javax.validation.Valid;
  */
 @Slf4j
 @RestController
-@RequestMapping(value="/api/aluno")
+@RequestMapping(value="/alunos")
 public class AlunoController {
 
-    @Autowired private AlunoBusiness alunoBusiness;
+    @Autowired
+    private AlunoBusiness alunoBusiness;
 
-    @PostMapping("/salva")
-    public ResponseEntity<?> salva (@Valid @RequestBody Aluno aluno) {
+    @PostMapping
+    public ResponseEntity<?> post (@Valid @RequestBody Aluno aluno) {
         log.info("Post Aluno");
-        log.debug("parameters {}" ,aluno);
-
-       val entity = alunoBusiness.salvaAluno(aluno);
-
-       if (entity.getRequestStatus().hasError())
-           return new ResponseEntity<>(new ApiMessage(entity.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
-
-       if (entity.getRequestStatus().isCreated())
-           return new ResponseEntity<>(new ApiMessage("id:" + entity.getRequestStatus().getId()), HttpStatus.CREATED);
-
-       return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
-
-    }
-
-    @GetMapping("/{id}") ResponseEntity<?> aluno(@PathVariable("id") Integer id) {
-        log.info("Get Aluno");
-        log.debug("id {}", id);
-
-        val response = alunoBusiness.buscaAluno(id);
-
-        if (response.isEmpty())
-            return new ResponseEntity<>(new ApiMessage("Aluno não encontrado"),HttpStatus.NOT_FOUND);
-
-
-        if(response.get().getRequestStatus().hasError()) {
-            return new ResponseEntity<>(new ApiMessage(response.get().getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        return response.map( v -> new ResponseEntity<>(response.get().getAluno(),HttpStatus.FOUND))
-                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @GetMapping("/alunos") ResponseEntity<?> alunos() {
-        log.info("Get alunos");
-
-        val response = alunoBusiness.buscaAlunos();
-
-        if (response.isEmpty())
-            return new ResponseEntity<>( new ApiMessage("Tente realizar a requisicao novamente"), HttpStatus.SERVICE_UNAVAILABLE);
-
-        if (response.get().isEmpty())  {
-            return new ResponseEntity<>(new ApiMessage("Recursos não encontrados"), HttpStatus.NOT_FOUND);
-        }
-
-        return response.map( v -> new ResponseEntity<>(response.get(), HttpStatus.FOUND))
-                     .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    }
-
-    @PutMapping("/edita") ResponseEntity<?> edita(@Valid @RequestBody Aluno aluno) {
-        log.info("put Aluno");
         log.debug("parameters {}", aluno);
 
-        val entity = alunoBusiness.salvaAluno(aluno);
+        try {
+            val entity = alunoBusiness.salvaAluno(aluno);
+            return ResponseEntity.status(HttpStatus.CREATED).body(entity);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
 
-        if (entity.getRequestStatus().hasError())
-            return new ResponseEntity<>(new ApiMessage(entity.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping("/remove/{id}") ResponseEntity<?> remove(@PathVariable Integer id) {
+    @GetMapping("/{id}") ResponseEntity<?> get(@PathVariable("id") Integer id) {
+        log.info("Get Aluno");
+        log.debug("id {}", id);
+        try {
+            val entity = alunoBusiness.buscaAluno(id);
+            if (entity.isEmpty())
+                throw new ResourceNotFoundException(String.format("Aluno com o ID: %s não encontrado.", id));
+
+            return entity.map( v ->  ResponseEntity.status(HttpStatus.FOUND).body(entity.get()))
+                         .orElseThrow();
+
+        } catch (ResourceNotFoundException re) {
+            log.error(re.getMessage());
+            throw new ResourceNotFoundException(re.getMessage());
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
+
+    }
+
+    @GetMapping
+    ResponseEntity<?> list() {
+        log.info("Get alunos");
+
+        try {
+            val entities = alunoBusiness.buscaAlunos();
+            if (entities.isEmpty())
+                return ResponseEntity.status(HttpStatus.OK).body(new ApiMessage("Nenhum aluno cadastrado."));
+
+            return ResponseEntity.status(HttpStatus.OK).body(entities);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
+
+    }
+
+    @PutMapping
+    ResponseEntity<?> edit(@Valid @RequestBody Aluno aluno) {
+        log.info("put Aluno");
+        log.debug("parameters {}", aluno);
+        try {
+            val entity = alunoBusiness.salvaAluno(aluno);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiMessage(String.format("Aluno %s editado com sucesso.", entity.getNome())));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
+
+    }
+
+    @DeleteMapping("/{id}")
+    ResponseEntity<?> delete(@PathVariable Integer id) {
         log.info("Delete Aluno");
         log.debug("id {}", id);
+        try {
+            val entity = alunoBusiness.buscaAluno(id);
+            if (entity.isEmpty())
+                throw new ResourceNotFoundException(String.format("Aluno com o ID: %s não encontrado.", id));
 
-        val entity = alunoBusiness.buscaAluno(id);
+            return ResponseEntity.status(HttpStatus.OK).body( new ApiMessage(String.format("Aluno %s deletado com sucesso", entity.get().getNome())));
 
-        if (entity.isEmpty())
-            return new ResponseEntity<>(new ApiMessage("Aluno não encontrado"), HttpStatus.NOT_FOUND);
+        } catch (ResourceNotFoundException re) {
+            log.error(re.getMessage());
+            throw new ResourceNotFoundException(re.getMessage());
 
-        if (entity.get().getRequestStatus().hasError())
-            return new ResponseEntity<>(new ApiMessage(entity.get().getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApiException(e.getMessage());
+        }
 
-        val response = alunoBusiness.removeAluno(id);
-
-        if (response.getRequestStatus().hasError())
-            return new ResponseEntity<>(new ApiMessage(response.getRequestStatus().getMessageError()), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        return new ResponseEntity<>(new ApiMessage("Aluno deletado com sucesso"), HttpStatus.OK);
     }
 }

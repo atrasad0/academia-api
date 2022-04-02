@@ -3,9 +3,8 @@ package com.api.cadastroAcademia.service.business.impl;
 import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.Aula;
-import com.api.cadastroAcademia.model.TO.AlunoTO;
 import com.api.cadastroAcademia.model.Telefone;
-import com.api.cadastroAcademia.model.utils.RequestStatus;
+import com.api.cadastroAcademia.model.dto.AlunoTO;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
 import com.api.cadastroAcademia.service.business.mapper.AulaMapper;
 import com.api.cadastroAcademia.service.business.mapper.TelefoneMapper;
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
@@ -38,49 +36,22 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     @Override
     @Transactional
     public AlunoTO salvaAluno(@NonNull Aluno aluno) {
-        try {
-            boolean newEntity = false;
-            validaParametros(aluno);
-            injectDefaultValues(aluno);
+        validaParametros(aluno);
+        injectDefaultValues(aluno);
 
-            if (aluno.getId() == null) {
-                isCpfDuplicado(aluno.getCpf());
-                newEntity = true;
-                alunoMapper.insere(aluno);
-            }
-            else
-                alunoMapper.modifica(aluno);
-
-            salvaRelacaoAulasAluno(aluno.getAulas(), aluno.getId());
-            salvaTelefones(aluno.getTelefones(), aluno);
-
-            log.info(String.format("Method 'salvaAluno' executed and a %s has created with id: %s.", aluno.getClass().getSimpleName(), aluno.getId()));
-
-            val status= RequestStatus.builder()
-                    .id(aluno.getId())
-                    .newEntity(newEntity)
-                    .statusCod(HttpStatus.CREATED)
-                    .build();
-
-            return AlunoTO.builder()
-                    .requestStatus(status)
-                    .aluno(aluno)
-                    .build();
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-
-            val status =RequestStatus.builder()
-                    .newEntity(false)
-                    .statusCod(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .error(e)
-                    .build();
-
-            return AlunoTO.builder()
-                .requestStatus(status)
-                .aluno(null)
-                .build();
+        if (aluno.getId() == null) {
+            isCpfDuplicado(aluno.getCpf());
+            alunoMapper.insere(aluno);
         }
+        else
+            alunoMapper.modifica(aluno);
+
+        salvaRelacaoAulasAluno(aluno.getAulas(), aluno.getId());
+        salvaTelefones(aluno.getTelefones(), aluno);
+
+        log.info(String.format("Method 'salvaAluno' executed and a %s has created with id: %s.", aluno.getClass().getSimpleName(), aluno.getId()));
+
+        return new AlunoTO(aluno);
     }
 
     /**
@@ -88,7 +59,7 @@ public class AlunoBusinessImpl implements AlunoBusiness {
      * @param listaAulas As aulas em que um aluno pode estar matriculado
      * @param idAluno O id do aluno.
      */
-    private void salvaRelacaoAulasAluno(@NonNull List<Aula> listaAulas, @NonNull Integer idAluno) {
+    private void salvaRelacaoAulasAluno(@NonNull List<Aula> listaAulas, int idAluno) {
         aulaMapper.removeAllAulaAluno(idAluno);
 
         for (val aula : listaAulas) {
@@ -131,96 +102,30 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     @Override
     @Transactional
     public Optional<AlunoTO> buscaAluno (@NonNull Integer id) {
-        try {
-            val aluno = alunoMapper.buscaAluno(id);
-
-            if(aluno == null)
-                return Optional.empty();
-
-            val status = RequestStatus.builder()
-                    .id(aluno.getId())
-                    .statusCod(HttpStatus.FOUND).build();
-
-            return Optional.of(AlunoTO.builder()
-                    .aluno(aluno)
-                    .requestStatus(status)
-                    .build());
-        } catch (Exception e) {
-
-            log.error(e.getMessage());
-
-            val status = RequestStatus.builder()
-                    .id(id)
-                    .newEntity(false)
-                    .error(e)
-                    .build();
-
-            return Optional.of(AlunoTO.builder()
-                    .aluno(null)
-                    .requestStatus(status)
-                    .build());
-        }
+        val aluno = alunoMapper.buscaAluno(id);
+        if(aluno == null)
+            return Optional.empty();
+        return Optional.of(new AlunoTO(aluno));
     }
 
     @Override
-    public Optional<List<AlunoTO>> buscaAlunos() {
-        try {
-            val alunos = alunoMapper.buscaAlunos();
-            if(alunos == null || alunos.isEmpty())
-                return Optional.empty();
+    public List<AlunoTO> buscaAlunos() {
+        val alunos = alunoMapper.buscaAlunos();
+        if(alunos == null || alunos.isEmpty())
+            return Collections.emptyList();
 
-            log.debug("{} found", alunos.size());
+        log.debug("{} found", alunos.size());
 
-
-            return Optional.of(alunos.stream()
-                    .map(v -> AlunoTO.builder().aluno(v)
-                            .requestStatus(RequestStatus.builder().id(v.getId()).statusCod(HttpStatus.FOUND).build())
-                            .build())
-                    .collect(Collectors.toList()));
-
-        } catch (Exception e) {
-            log.error(e.getMessage());
-
-            val status = RequestStatus.builder()
-                    .newEntity(false)
-                    .error(e)
-                    .build();
-
-            return Optional.of(Collections.singletonList(AlunoTO.builder()
-                    .aluno(null)
-                    .requestStatus(status)
-                    .build()));
-        }
-
+        return alunos.stream().map(AlunoTO::new).collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional
-    public AlunoTO removeAluno(Integer id) {
-        try {
-            alunoMapper.remove(id);
-            log.info("Aluno removed, id: " + id);
-
-            val status = RequestStatus.builder().statusCod(HttpStatus.NO_CONTENT).build();
-
-            return AlunoTO.builder()
-                    .aluno(new Aluno(id))
-                    .requestStatus(status)
-                    .build();
-        } catch (Exception e) {
-            log.error(e.getMessage());
-
-            val status = RequestStatus.builder()
-                    .id(id)
-                    .error(e)
-                    .build();
-            return AlunoTO.builder()
-                    .aluno(new Aluno(id))
-                    .requestStatus(status)
-                    .build();
-        }
+    public void removeAluno(@NonNull Integer id) {
+        alunoMapper.remove(id);
+        log.info("Aluno removed, id: " + id);
     }
-
 
     /**
      * Verifica se um cpf informado já esta cadastrado no sistema.
