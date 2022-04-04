@@ -1,7 +1,7 @@
 package com.api.cadastroAcademia.business;
 
 import com.api.cadastroAcademia.model.Aluno;
-import com.api.cadastroAcademia.model.dto.AlunoTO;
+import com.api.cadastroAcademia.model.dto.aluno.AlunoTO;
 import lombok.NonNull;
 
 import java.util.List;
@@ -12,9 +12,9 @@ public interface AlunoBusiness {
     /**
      * Salva um aluno no banco de dados, caso ja exista, o mesmo será modificado.
      * @param aluno O aluno a ser salvo.
-     * @return O id do aluno no banco de dados.
+     * @return O aluno salvo no banco de dados no formato {@link AlunoTO}.
      */
-    AlunoTO salvaAluno(@NonNull Aluno aluno);
+    AlunoTO salvaAluno(@NonNull AlunoTO aluno);
 
     /**
      * Tenta encontrar um aluno cadastrado no banco de dados.

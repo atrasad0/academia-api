@@ -4,7 +4,7 @@ import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.Aula;
 import com.api.cadastroAcademia.model.Telefone;
-import com.api.cadastroAcademia.model.dto.AlunoTO;
+import com.api.cadastroAcademia.model.dto.aluno.AlunoTO;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
 import com.api.cadastroAcademia.service.business.mapper.AulaMapper;
 import com.api.cadastroAcademia.service.business.mapper.TelefoneMapper;
@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -33,25 +34,28 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     private final AlunoMapper alunoMapper;
     private final TelefoneMapper telefoneMapper;
     private final AulaMapper aulaMapper;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
-    public AlunoTO salvaAluno(@NonNull Aluno aluno) {
-        validaParametros(aluno);
-        injectDefaultValues(aluno);
+    public AlunoTO salvaAluno(@NonNull AlunoTO alunoTO) {
+        val aluno = this.toAluno(alunoTO);
 
-        if (aluno.getId() == null) {
-            isCpfDuplicado(aluno.getCpf());
+        this.validaParametros(aluno);
+        this.injectDefaultValues(aluno);
+
+        if (aluno.getId() == null || aluno.getId() == 0) {
+            this.isCpfDuplicado(aluno.getCpf());
             alunoMapper.insere(aluno);
         }
         else
             alunoMapper.modifica(aluno);
 
-        salvaRelacaoAulasAluno(aluno.getAulas(), aluno.getId());
-        salvaTelefones(aluno.getTelefones(), aluno);
+        this.salvaRelacaoAulasAluno(aluno.getAulas(), aluno.getId());
+        this.salvaTelefones(aluno.getTelefones(), aluno);
 
         log.info(String.format("Method 'salvaAluno' executed and a %s has created with id: %s.", aluno.getClass().getSimpleName(), aluno.getId()));
-        return new AlunoTO(aluno);
+        return toAlunoDTO(aluno);
     }
 
     /**
@@ -105,7 +109,7 @@ public class AlunoBusinessImpl implements AlunoBusiness {
         val aluno = alunoMapper.buscaAluno(id);
         if(aluno == null)
             return Optional.empty();
-        return Optional.of(new AlunoTO(aluno));
+        return Optional.of(modelMapper.map(aluno, AlunoTO.class));
     }
 
     @Override
@@ -116,7 +120,7 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
         log.debug("{} found", alunos.size());
 
-        return alunos.stream().map(AlunoTO::new).collect(Collectors.toList());
+        return alunos.stream().map(this::toAlunoDTO).collect(Collectors.toList());
     }
 
 
@@ -147,6 +151,11 @@ public class AlunoBusinessImpl implements AlunoBusiness {
 
         if (Objects.isNull(aluno.getNome()))
             sb.append("Nome do aluno \u00E9 obrigat\u00F3rio.\n");
+        else {
+            if(aluno.getNome().isBlank() || aluno.getNome().length() < 3) {
+                sb.append("Nome do aluno deve ter no m\u00EDnimo 3 caracteres");
+            }
+        }
 
         if (Objects.isNull(aluno.getCpf()))
             sb.append("CPF do aluno \u00E9 obrigat\u00F3rio.\n");
@@ -186,6 +195,24 @@ public class AlunoBusinessImpl implements AlunoBusiness {
             aluno.setTelefones(new ArrayList<>());
 
         aluno.setCpf(setOnlyNumbers(aluno.getCpf()));
+    }
+
+    /**
+     * Converte um {@link Aluno} em um {@link AlunoTO}
+     * @param aluno O aluno a ser tranformado.
+     * @return O aluno no formato {@link AlunoTO}.
+     */
+    private AlunoTO toAlunoDTO(@NonNull Aluno aluno) {
+        return modelMapper.map(aluno, AlunoTO.class);
+    }
+
+    /**
+     * Converte um {@link AlunoTO} em um {@link Aluno}
+     * @param alunoTO O aluno a ser tranformado.
+     * @return O aluno no formato {@link Aluno}.
+     */
+    private Aluno toAluno(@NonNull AlunoTO alunoTO) {
+        return modelMapper.map(alunoTO, Aluno.class);
     }
 
 }

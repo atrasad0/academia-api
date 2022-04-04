@@ -3,8 +3,8 @@ package com.api.cadastroAcademia.controller;
 import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.exception.ResourceNotFoundException;
-import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.ApiMessage;
+import com.api.cadastroAcademia.model.dto.aluno.AlunoTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 
@@ -33,13 +34,15 @@ public class AlunoController {
     private final AlunoBusiness alunoBusiness;
 
     @PostMapping
-    public ResponseEntity<?> post (@Valid @RequestBody Aluno aluno) {
+    public ResponseEntity<?> post (@Valid @RequestBody AlunoTO aluno) {
         log.info("Post Aluno");
         log.debug("parameters {}", aluno);
 
         try {
             val entity = alunoBusiness.salvaAluno(aluno);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessage(String.format("Aluno %s criado com sucesso.", entity.getNome())));
+            val uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(entity.getId()).toUri();
+
+            return ResponseEntity.created(uri).body(entity);
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ApiException(e.getMessage());
@@ -88,7 +91,7 @@ public class AlunoController {
     }
 
     @PutMapping
-    ResponseEntity<?> edit(@Valid @RequestBody Aluno aluno) {
+    ResponseEntity<?> edit(@Valid @RequestBody AlunoTO aluno) {
         log.info("put Aluno");
         log.debug("parameters {}", aluno);
 
