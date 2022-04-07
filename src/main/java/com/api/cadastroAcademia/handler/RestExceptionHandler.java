@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
+/**
+ * Classe que lida com a padronização de mensagens de Erro da aplicação para o usuário
+ */
 @ControllerAdvice
 public class RestExceptionHandler {
 
@@ -54,6 +57,19 @@ public class RestExceptionHandler {
                 .field(fields)
                 .fieldMessage(messages)
                 .detail(manvException.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<?> handleIllegalArgumentExceptio(IllegalArgumentException iaException) {
+
+        val response = StandardExceptionDetails.builder()
+                .when(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .title("Erro nos par\u00E2metros da requisi\u00E7\u00E3o")
+                .detail(iaException.getMessage())
                 .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

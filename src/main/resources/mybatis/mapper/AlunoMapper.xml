@@ -11,6 +11,7 @@
         <result property="sexo"           column="sexo" />
         <result property="dataNascimento" column="data_nascimento" />
         <result property="dataPagamento"  column="data_pagamento" />
+        <result property="dataCadastro"   column="data_cadastro" />
         <association property="telefones" column="id_aluno" select="com.api.cadastroAcademia.service.business.mapper.TelefoneMapper.listaTelefonesPorIdAluno" />
         <association property="aulas"     column="id_aluno" select="com.api.cadastroAcademia.service.business.mapper.AulaMapper.listaAulasPorIdAluno" />
         <association property="plano"     column="id_plano" select="com.api.cadastroAcademia.service.business.mapper.PlanoMapper.buscaPlano" />
@@ -72,7 +73,13 @@
     </select>
 
     <select id="buscaAlunos"  resultMap="alunoResult">
-        SELECT *
+        SELECT a.*
+        FROM alunos a
+        ORDER BY a.data_cadastro
+    </select>
+
+    <select id="countAlunos"  resultType="int">
+        SELECT COUNT(*)
         FROM alunos
     </select>
 

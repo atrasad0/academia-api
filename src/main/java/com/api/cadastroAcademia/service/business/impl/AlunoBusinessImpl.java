@@ -3,15 +3,19 @@ package com.api.cadastroAcademia.service.business.impl;
 import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.model.Aluno;
 import com.api.cadastroAcademia.model.Aula;
+import com.api.cadastroAcademia.model.Paged;
+import com.api.cadastroAcademia.model.Pagination;
 import com.api.cadastroAcademia.model.Telefone;
 import com.api.cadastroAcademia.model.dto.aluno.AlunoTO;
 import com.api.cadastroAcademia.service.business.mapper.AlunoMapper;
 import com.api.cadastroAcademia.service.business.mapper.AulaMapper;
 import com.api.cadastroAcademia.service.business.mapper.TelefoneMapper;
+import com.api.cadastroAcademia.util.PaginationHelper;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.ibatis.session.RowBounds;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -113,16 +117,52 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     }
 
     @Override
-    public List<AlunoTO> buscaAlunos() {
-        val alunos = alunoMapper.buscaAlunos();
-        if(alunos == null || alunos.isEmpty())
-            return Collections.emptyList();
+    public Paged<AlunoTO> buscaAlunos(Pagination pagination) {
+        RowBounds bounds;
+        int page;
+
+        if (Objects.isNull(pagination)) {
+            bounds = PaginationHelper.getDefaultBounds();
+            page = 1;
+        } else {
+            if (pagination.getPage() == 0)
+                throw new IllegalArgumentException("O atributo PAGE da paginação deve começar em 1.");
+
+            if (pagination.getSize() == 0)
+                throw new IllegalArgumentException("O atributo SIZE da paginação deve ter ao menos o tamanho 1.");
+
+            bounds = PaginationHelper.calculateBounds(pagination.getPage(), pagination.getSize());
+            page = pagination.getPage();
+        }
+
+        val totalAlunos = alunoMapper.countAlunos();
+        val totalPages = PaginationHelper.countNumberOfPages(totalAlunos, bounds.getLimit());
+
+        /* Se requisitada uma página a mais que o sistema possui. */
+        if (Objects.nonNull(pagination) && totalPages < pagination.getPage()) {
+            bounds = PaginationHelper.calculateBounds(totalPages, pagination.getSize());
+            page = totalPages;
+        }
+
+        val alunos = alunoMapper.buscaAlunos(bounds);
+        val last = page == totalPages;
+
+        if (alunos == null || alunos.isEmpty())
+            return Paged.<AlunoTO>builder().content(Collections.emptyList()).build();
 
         log.debug("{} found", alunos.size());
 
-        return alunos.stream().map(this::toAlunoDTO).collect(Collectors.toList());
-    }
+        val alunosTO = alunos.stream().map(this::toAlunoDTO).collect(Collectors.toList());
 
+        return Paged.<AlunoTO>builder()
+                .content(alunosTO)
+                .pageNumber(page)
+                .totalPages(totalPages)
+                .totalElements(totalAlunos)
+                .pageSize(bounds.getLimit())
+                .last(last)
+                .build();
+    }
 
     @Override
     @Transactional
@@ -214,5 +254,4 @@ public class AlunoBusinessImpl implements AlunoBusiness {
     private Aluno toAluno(@NonNull AlunoTO alunoTO) {
         return modelMapper.map(alunoTO, Aluno.class);
     }
-
 }

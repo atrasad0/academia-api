@@ -5,6 +5,9 @@ import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
+/**
+ * Classe que representa uma mensagem padrão de Exceptions da aplicação.
+ */
 @SuperBuilder
 @Getter
 public class StandardExceptionDetails {

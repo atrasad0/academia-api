@@ -4,10 +4,12 @@ import com.api.cadastroAcademia.business.AlunoBusiness;
 import com.api.cadastroAcademia.exception.ApiException;
 import com.api.cadastroAcademia.exception.ResourceNotFoundException;
 import com.api.cadastroAcademia.model.ApiMessage;
+import com.api.cadastroAcademia.model.Pagination;
 import com.api.cadastroAcademia.model.dto.aluno.AlunoTO;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,10 +19,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
+import java.util.Objects;
 
 /**
  * EndPoint REST que atende as requisiçoes relacionadas a um aluno.
@@ -74,15 +78,27 @@ public class AlunoController {
     }
 
     @GetMapping
-    ResponseEntity<?> list() {
+    ResponseEntity<?> list(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size ) {
         log.info("Get alunos");
 
         try {
-            val entities = alunoBusiness.buscaAlunos();
-            if (entities.isEmpty())
+            Pagination pagination = null;
+
+            if (Objects.nonNull(page) && Objects.nonNull(size)) {
+                pagination = new Pagination(page, size);
+            }
+
+            val entities = alunoBusiness.buscaAlunos(pagination);
+
+            if (entities.getContent().isEmpty())
                 return ResponseEntity.status(HttpStatus.OK).body(new ApiMessage("Nenhum aluno cadastrado."));
 
             return ResponseEntity.status(HttpStatus.OK).body(entities);
+
+        } catch (IllegalArgumentException e) {
+            log.error(e.getMessage());
+            throw new IllegalArgumentException(e.getMessage());
+
         } catch (Exception e) {
             log.error(e.getMessage());
             throw new ApiException(e.getMessage());
